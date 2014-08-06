@@ -12,6 +12,7 @@ namespace InsertGenerator.Data
         Integer,
         Boolean,
         Double,
-        Blob
+        Blob,
+        Null
     };
 }

@@ -35,17 +35,17 @@ namespace InsertGenerator.Writers
 
         private void WriteInsert(Query.InsertQuery query, Row row, System.IO.TextWriter writer)
         {
-            List<string> columns = row.Keys.ToList();
+            IEnumerable<string> columns = row.Keys.ToList();
             List<string> values = columns.Select(x => HandleValue(row[x])).ToList();
 
-            writer.WriteLine("INSERT INTO {0} ({1}) VALUES ({2});", query.Table, string.Join(",",columns), string.Join(",",values));
+            writer.WriteLine("INSERT INTO {0} ({1}) VALUES ({2});", query.Table, string.Join(",", columns.Select(x => WrapColumnName(x))), string.Join(",", values));
         }
 
         private void WriteUpdate(Query.UpdateQuery query, Row row, System.IO.TextWriter writer)
         {
             
             List<string> setList = row.Keys.Where(x => !query.Keys.Contains(x)).Select(x =>
-                string.Format("{0} = {1}", x, HandleValue(row[x]))).ToList();
+                string.Format("{0} = {1}", WrapColumnName(x), HandleValue(row[x]))).ToList();
             
 
             writer.WriteLine("UPDATE {0} SET {1} WHERE {2};",query.Table, string.Join(",",setList), GenerateWhereList(query,row));
@@ -58,8 +58,13 @@ namespace InsertGenerator.Writers
 
         private string GenerateWhereList(Query.SelectiveQuery query, Row row)
         {
-            List<string> whereList = query.Keys.Select(x => string.Format("{0} = {1}", x, HandleValue(row[x]))).ToList();
+            List<string> whereList = query.Keys.Select(x => string.Format("{0} = {1}", WrapColumnName(x), HandleValue(row[x]))).ToList();
             return string.Join(" AND ", whereList);
+        }
+
+        private string WrapColumnName(string columnName)
+        {
+            return string.Format("[{0}]", columnName);
         }
 
         private string HandleValue(Value value)
@@ -67,6 +72,10 @@ namespace InsertGenerator.Writers
             string result = "";
             switch (value.Type)
             {
+                case ColumnType.Null:
+                    result = "NULL";
+                    break;
+
                 case ColumnType.Boolean:
                     result = (((bool) value.Item) ? 1 : 0).ToString();
                     break;

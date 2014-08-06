@@ -47,8 +47,11 @@ namespace InsertGenerator.DataAccess
             value.Item = reader.GetValue(column);
 
             Type type = value.Item.GetType();
-
-            if(typeof(bool).IsAssignableFrom(type))
+            if (reader.IsDBNull(column))
+            {
+                value.Type = ColumnType.Null;
+            }
+            else if(typeof(bool).IsAssignableFrom(type))
             {
                 value.Type = ColumnType.Boolean;
             }
@@ -56,7 +59,7 @@ namespace InsertGenerator.DataAccess
             {
                 value.Type = ColumnType.Integer;
             }
-            else if (typeof(double).IsAssignableFrom(type))
+            else if (typeof(float).IsAssignableFrom(type) || typeof(double).IsAssignableFrom(type))
             {
                 value.Type = ColumnType.Double;
             }
